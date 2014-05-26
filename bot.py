@@ -17,12 +17,12 @@ import re
 import requests
 
 # pull in onboard data and establish connection
-user_agent = ("praw script for "
-              "showing IMDb data from links "
-              "by /u/zd9")
-reddit = praw.Reddit(user_agent = user_agent)
-#reddit.login(username = sys.argv[1], password = sys.argv[2])
-ia = imdb.IMDb()
+version = 1.0
+
+user_agent = ('IMBBot/v' + str(version) + ' by /u/zd9')
+reddit = praw.Reddit(user_agent=user_agent)
+reddit.login(username=sys.argv[1], password=sys.argv[2])
+ia = imdb.IMDb(accessSystem='http', adultSearch=0)
 
 keep_on = True
 
@@ -38,28 +38,34 @@ def get_imdb_data(imdb_id):
         movies = ia.search_movie(imdb_id)
         movie = movies[0]
         ia.update(movie)
-        return(movie.summary)
+        return(movie)
 
     elif (imdb_id[0] + imdb_id[1] == 'ch'):
         characters = ia.search_character(imdb_id)
         character = characters[0]
         ia.update(character)
-        return(character.summary)
+        return(character)
 
     elif (imdb_id[0] + imdb_id[1] == 'nm'):
         names = ia.search_person(imdb_id)
         name = names[0]
         ia.update(name)
-        return(name.summary)
+        return(name)
+    else:
+        return('No Data')
 
 
 while (keep_on):
     try:
-        # pull comments
-        subreddit_comments = reddit.get_comments('all')
 
-        submission = reddit.get_submission(submission_id='') # NEEDS ID!!!
-        already_done = submission.comments
+        print("running...")
+        # pull comments
+        #subreddit_comments = reddit.get_comments('all')
+        # for debug
+        subreddit_comments = reddit.get_submission(submission_id="24fduc")
+
+        all_done = reddit.get_submission(submission_id='24f9ig')
+        already_done = all_done.comments
         done = ""
         done_new = ""
         banned_subreddits = []
@@ -70,7 +76,7 @@ while (keep_on):
             else:
                 done = done + "\n" + comment.body
 
-        for comment in subreddit_comments:
+        for comment in subreddit_comments.comments:
             if (comment.subreddit not in banned_subreddits) or (comment.author.name not in user_blacklist):
                 pattern1 = re.compile("http://www\.imdb\.com/(?:character/|title/|name/)(?P<id1>ch|tt|nm)(?P<id2>\d{7})/")
                 match = pattern1.search(comment.body)
@@ -78,11 +84,27 @@ while (keep_on):
                     continue
 
                 if (match and comment.id not in already_done):
-                    imdb_id = "".join(match.group('id1', 'id2'))
+                    imdb = "".join(match.group('id1', 'id2'))
 
-                    info = get_imdb_data(imdb_id)
+                    info = get_imdb_data(imdb)
 
-                    print(info)
+                    dl = [d['name'] for d in info['director']]
+                    pl = [p['name'] for p in info['producer']]
+                    cl = [c['name'] for c in info['cast'][0:10]]
+                    director = ', '.join(dl)
+                    producer = ', '.join(pl)
+                    cast = ', '.join(cl)
+                    genre = ', '.join(info['genres'])
+
+                    comment.reply('***[' + info['long imdb canonical title'] + '](' + match.group(0) + ')***\n\n'
+                     + '\n\n**IMDB Rating:** ' + str(info['rating']) + '/10\n\n**Director(s):** ' + director
+                     + '\n\n**Producer(s):** ' + producer
+                     + '\n\n**Cast:** ' + cast
+                     + '...\n\n**Plot:** ' + info['plot outline']
+                     + '\n\n**Genre:** ' + genre
+                     + '\n\n------------------------\n\n^^^[Questions/Comments/Suggestions?](http://www.reddit.com/message/compose/?to=zd9&subject=IMDbBot) ^^^Version ^^^' + str(version) + ' ^^^[Source](https://github.com/zd9/IMDb-Reddit-Bot)')
+
+                    all_done.add_comment(comment.id)
 
     except requests.exceptions.HTTPError as err:
         if err.response.status_code in [502, 503, 504]:
