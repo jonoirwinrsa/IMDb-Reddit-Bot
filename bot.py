@@ -40,7 +40,7 @@ def get_imdb_data(imdb_id):
             movie = movies[0]
             ia.update(movie)
             #for debug
-            print('found')
+            #print('found')
             return(movie)
 
         elif (imdb_id[0] + imdb_id[1] == 'nm'):
@@ -48,12 +48,12 @@ def get_imdb_data(imdb_id):
             name = names[0]
             ia.update(name)
             #for debug
-            print('found')
+            #print('found')
             return(name)
 
     except IndexError:
         #for debug
-        print('not found')
+        #print('not found')
         return('No Data')
 
 
@@ -107,9 +107,9 @@ while (keep_on):
 
         print("running...")
         # pull comments
-        #subreddit_comments = reddit.get_comments('all')
+        subreddit_comments = reddit.get_comments('all')
         # for debug
-        subreddit_comments = reddit.get_submission(submission_id="24fduc")
+        #subreddit_comments = reddit.get_submission(submission_id="24fduc")
 
         all_done = reddit.get_submission(submission_id='24f9ig')
         already_done = all_done.comments
@@ -166,6 +166,6 @@ while (keep_on):
             # assume other errors are fatal
             print str(err)
             print "Terminating"
-    #time.sleep(5)
+    time.sleep(5)
     #for debug
-    keep_on = False
+    #keep_on = False
