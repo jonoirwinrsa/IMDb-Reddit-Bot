@@ -3,7 +3,7 @@ IMDb-Reddit-Bot v1.0
 
 Source for /u/IMDbBot
 
-Run with `./bot.py [username] [password]` (add `& exit` to run in the background, add `>> out.log`)
+Run with `./bot.py [username] [password]` (add `>> out.log` to log output, add `& exit` to run in the background)
 
 End with `./kill_bot.py`
 
